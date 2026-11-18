@@ -208,7 +208,7 @@
 
 .hero-scrim {
   background:
-    linear-gradient(to top, rgb(33 71 139 / 0.55) 0%, rgb(33 71 139 / 0.15) 40%, transparent 70%),
+    linear-gradient(to top, rgb(33 71 139 / 0.6) 0%, rgb(33 71 139 / 0.3) 35%, transparent 70%),
     linear-gradient(to right, rgb(33 71 139 / 0.3) 0%, transparent 60%);
 }
 

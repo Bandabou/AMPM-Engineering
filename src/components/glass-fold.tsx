@@ -25,6 +25,11 @@ export interface GlassFoldProps {
   offset?: [number, number];
   /** How much the edges darken, 0 to 1. 0.55 takes them down to 45% of the background; 0 keeps them even. */
   vignette?: number;
+  /** Strength of the bright ridges (the lit edges in color3), 0 to 1. 1 is the full look. */
+  highlight?: number;
+  /** How much the folds fade on the left, 0 to 1: calm across the left half, rising smoothly to full on the right.
+   * 0 is even; 0.8 leaves 20% on the left. Portrait screens get the calm evenly, as their text spans the width. */
+  calm?: number;
   className?: string;
 }
 
@@ -50,6 +55,8 @@ const FRAGMENT = `
   uniform float u_folds;
   uniform vec2 u_offset;
   uniform float u_vignette;
+  uniform float u_highlight;
+  uniform float u_calm;
   varying vec2 vUv;
 
   float grain(vec2 st) {
@@ -78,6 +85,12 @@ const FRAGMENT = `
     float pixel = 2.0 * u_scale / max(u_resolution.y, 1.0);
 
     vec3 color = mix(u_color2, u_color2 * (1.0 - u_vignette), clamp(length(centered(uv)) * 1.3, 0.0, 1.0));
+    // Weakest folds on the left, full strength on the right: calm across the left half, then one
+    // wide smoothstep up to the right edge, so the change is gradual and never shows an edge.
+    // On portrait screens the text spans the full width, so the calm applies evenly instead.
+    float aspect = u_resolution.x / max(u_resolution.y, 1.0);
+    float landscape = smoothstep(0.8, 1.3, aspect);
+    float calmMask = mix(1.0 - u_calm, mix(1.0 - u_calm, 1.0, smoothstep(0.3, 1.0, uv.x)), landscape);
 
     for (int i = 0; i < 6; i++) {
       float fi = float(i);
@@ -101,7 +114,8 @@ const FRAGMENT = `
 
       vec3 tint = mix(u_color1, u_color3, clamp(fresnel * 0.6 + 0.08 + 0.14 * sin(fi * 2.1 + q.x * 0.8 + t * 0.2), 0.0, 1.0));
       vec3 light = tint * pane * (body * 0.42 + fresnel * 0.4)
-                 + u_color3 * (pane * (rim * 0.6 + inner * 0.12) + bloom * 0.1);
+                 + u_color3 * (pane * (rim * 0.6 + inner * 0.12) + bloom * 0.1) * u_highlight;
+      light *= calmMask;
 
       // screen blend
       color += light * (1.0 - color);
@@ -144,6 +158,8 @@ export function GlassFold({
   folds = 6,
   offset = [0, 0],
   vignette = 0.55,
+  highlight = 1,
+  calm = 0,
   className,
 }: GlassFoldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -183,6 +199,8 @@ export function GlassFold({
     gl.uniform1f(uniform("u_folds"), folds);
     gl.uniform2f(uniform("u_offset"), offsetX, offsetY);
     gl.uniform1f(uniform("u_vignette"), vignette);
+    gl.uniform1f(uniform("u_highlight"), highlight);
+    gl.uniform1f(uniform("u_calm"), calm);
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -242,7 +260,7 @@ export function GlassFold({
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
     };
-  }, [color1, color2, color3, speed, scale, noise, folds, offsetX, offsetY, vignette]);
+  }, [color1, color2, color3, speed, scale, noise, folds, offsetX, offsetY, vignette, highlight, calm]);
 
   return (
     <canvas

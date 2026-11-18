@@ -14,8 +14,10 @@ export const servicesCta = { label: "Our Services", href: "#services" };
 export const hero = {
   // Split only so each part can animate in. Together they read as the exact client copy.
   headlineLines: ["From idea to", "finished part."],
-  // Client copy, one entry per line as written: "design, fix / and print".
-  subheadingLines: ["Aeronautical engineers who design, fix", "and print your parts in-house."],
+  // The same words in three lines, for phones: shorter lines let the headline be larger there.
+  headlineLinesPhone: ["From idea", "to finished", "part."],
+  // Client copy. One entry per line: the break is forced from md up; smaller screens wrap naturally.
+  subheadingLines: ["Aeronautical engineers who design,", "fix and print your parts in-house."],
 };
 
 // Step titles and one-liners: exact client copy. PLACEHOLDER IMAGERY: swap for company photography when supplied.
