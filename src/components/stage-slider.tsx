@@ -120,7 +120,7 @@ export function StageSlider({ stages, label }: { stages: Stage[]; label: string 
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.45, ease: EASE }}
+              transition={{ duration: 0.2, ease: EASE }}
             >
               <p className="font-mono text-[13px] tracking-[0.08em] uppercase tabular-nums">
                 <span className="text-ink/45">

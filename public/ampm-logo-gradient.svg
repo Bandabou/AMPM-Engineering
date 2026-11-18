@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 322.16 247.15">
+  <defs>
+    <linearGradient id="g" x1="0" y1="123.57" x2="322.16" y2="123.57" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#21478b"/>
+      <stop offset=".04" stop-color="#285092"/>
+      <stop offset=".25" stop-color="#4777b1"/>
+      <stop offset=".45" stop-color="#6096c9"/>
+      <stop offset=".64" stop-color="#71acdb"/>
+      <stop offset=".83" stop-color="#7cb9e5"/>
+      <stop offset="1" stop-color="#80bee9"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="171.91" y1="158.29" x2="206.63" y2="158.29" href="#g"/>
+  </defs>
+  <polyline fill="url(#g)" points="155.6 28.48 155.6 247.13 166.56 247.13 166.56 28.48 166.56 28.48 309.07 247.13 322.16 247.15 321.12 245.55 161.08 0 0 247.15 13.09 247.13 86.56 134.41 86.57 134.39 87.42 134.39 150.66 134.39 150.66 123.43 94.57 123.43 93.72 123.43 155.6 28.48"/>
+  <path fill="url(#g2)" d="M171.91,193.01v-10.96c13.1,0,23.76-10.66,23.76-23.76s-10.66-23.76-23.76-23.76v-10.96c19.14,0,34.72,15.58,34.72,34.72s-15.58,34.72-34.72,34.72Z"/>
+</svg>

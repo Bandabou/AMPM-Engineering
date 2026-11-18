@@ -52,7 +52,6 @@ function ConsultDrawing({ label, className }: DrawingProps) {
   const reach = lensRadius + 22 + 96;
   const handleAt: Point = [sketchAt[0] - reach * Math.SQRT1_2, sketchAt[1] + reach * Math.SQRT1_2];
   const lensTop = (lensZ + lensLayers) * LAYER_HEIGHT;
-  const lensCentre = project(sketchAt, lensTop);
 
   const marks = (
     <>
@@ -128,20 +127,6 @@ function ConsultDrawing({ label, className }: DrawingProps) {
         d={pathOf(circle(lensRadius).map(([x, y]) => project([x + sketchAt[0], y + sketchAt[1]], lensTop)), true)}
         fill={`url(#${sheenId})`}
       />
-      {/* Through the glass: the detail being checked, picked out in blue. */}
-      <path
-        d={pathOf(
-          shift(gearOutline(14, 136, 168))
-            .slice(8, 24)
-            .map(([x, y]) => project([x, y], lensTop))
-            .map(([x, y]): Point => [lensCentre[0] + (x - lensCentre[0]) * 0.62 + 40, lensCentre[1] + (y - lensCentre[1]) * 0.62 + 8]),
-        )}
-        fill="none"
-        stroke={ACCENT}
-        strokeWidth="5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
     </LayerScene>
   );
 }
@@ -189,11 +174,6 @@ function DesignDrawing({ label, className }: DrawingProps) {
 
   // Where the hub's side walls meet the silhouette, seen from this angle.
   const hubEdge = 132 * Math.SQRT1_2;
-  const leaderFrom = project([72 * Math.SQRT1_2, -72 * Math.SQRT1_2], hubTop);
-  const leaderTo: Point = [leaderFrom[0] + 240, leaderFrom[1] - 190];
-
-  const heightX = project([tip + 34, -tip - 34])[0];
-  const heightBase = project([tip * Math.SQRT1_2, -tip * Math.SQRT1_2])[1];
 
   return (
     <LayerScene
@@ -204,10 +184,8 @@ function DesignDrawing({ label, className }: DrawingProps) {
         project([420, -420]),
         project([-420, 420]),
         project([0, 0], hubTop + 60),
-        [leaderTo[0] + 150, leaderTo[1] - 50],
         project([-tip, dimensionY + 60]),
         project([tip, dimensionY + 60]),
-        [heightX + 100, heightBase],
         [badge[0] + 40, badge[1] + 40],
       ]}
       label={label}
@@ -287,14 +265,9 @@ function DesignDrawing({ label, className }: DrawingProps) {
         <path d={pathOf([project([-tip, 18]), project([-tip, dimensionY + 16])])} />
         <path d={pathOf([project([tip, 18]), project([tip, dimensionY + 16])])} />
         <path d={pathOf([dimStart, dimEnd])} />
-        <path d={pathOf([[heightX, heightBase], [heightX, heightBase - hubTop]])} />
-        <path d={pathOf([[heightX - 18, heightBase], [heightX + 18, heightBase]])} />
-        <path d={pathOf([[heightX - 18, heightBase - hubTop], [heightX + 18, heightBase - hubTop]])} />
-        <path d={pathOf([leaderFrom, leaderTo, [leaderTo[0] + 136, leaderTo[1]]])} />
       </g>
       <Arrow tip={dimStart} towards={dimEnd} />
       <Arrow tip={dimEnd} towards={dimStart} />
-      <Arrow tip={leaderFrom} towards={leaderTo} />
 
       <g fill={INK} fontFamily={MONO} fontSize="40">
         {/* Laid flat on the ground plane, like a dimension on an isometric drawing. */}
@@ -304,96 +277,80 @@ function DesignDrawing({ label, className }: DrawingProps) {
         >
           Ø 120
         </text>
-        <text x={heightX + 30} y={heightBase - hubTop / 2 + 14}>
-          24
-        </text>
-        <text x={leaderTo[0] + 4} y={leaderTo[1] - 14}>
-          Ø 24
-        </text>
       </g>
     </LayerScene>
   );
 }
 
-function PrepareDrawing({ label, className }: DrawingProps) {
-  // The gear set up for printing: turned to its best side, propped on supports, layer height chosen.
-  const bedLayers = 6;
-  const supportLayers = 16;
-  const bodyLayers = 14;
-  const hubLayers = 10;
+// A mounting bracket: a base flange, an upright wall at the back and a shelf reaching forward from its top.
+// The shelf overhangs, so it can't print in mid-air: that is what supports are for.
+const FLANGE_LAYERS = 8;
+const WALL_LAYERS = 44;
+const SHELF_LAYERS = 8;
+const SHELF_CENTRE: Point = [0, -90];
 
-  const teeth = 20;
-  const gear = gearOutline(teeth, 215, 250);
-  const bore = circle(46);
-  const boss = circle(92);
-  const bodyZ = bedLayers + supportLayers;
-  const hubZ = bodyZ + bodyLayers;
-  const top = (hubZ + hubLayers) * LAYER_HEIGHT;
-
-  // One support under every tooth and a second ring further in.
-  const ringOf = (count: number, r: number, phase: number): Point[] =>
-    Array.from({ length: count }, (_, i) => {
-      const a = ((i + phase) / count) * Math.PI * 2;
-      return [Math.cos(a) * r, Math.sin(a) * r] as const;
-    });
-  const supports = [...ringOf(teeth, 232, 0.55), ...ringOf(12, 160, 0)];
-
-  // Everything standing on the bed, back to front, so nearer pieces cover farther ones.
-  const lowerBoss: Body = {
-    layers: [{ loops: [boss], count: supportLayers, hiddenTop: true }],
-    tone: "graphite",
-    z: bedLayers,
+function bracketBodies(tone: "graphite" | "blue", z: number, smooth: boolean): { lower: Body[]; shelf: Body } {
+  const wallTop = z + FLANGE_LAYERS + WALL_LAYERS;
+  return {
+    lower: [
+      { layers: [{ loops: [roundedRect(620, 440, 22)], count: FLANGE_LAYERS }], tone, z, smooth },
+      { layers: [{ loops: [roundedRect(620, 50, 6, 0, -195)], count: WALL_LAYERS }], tone, z: z + FLANGE_LAYERS, smooth },
+    ],
+    shelf: {
+      layers: [{ loops: [roundedRect(340, 260, 10, ...SHELF_CENTRE), circle(28, ...SHELF_CENTRE, 32)], count: SHELF_LAYERS }],
+      tone,
+      z: wallTop - SHELF_LAYERS,
+      smooth,
+    },
   };
-  const standing: Body[] = [
-    lowerBoss,
-    ...supports.map(
-      (spot): Body => ({
-        layers: [{ loops: [roundedRect(15, 15, 3)], count: supportLayers, hiddenTop: true }],
-        tone: "blue",
-        at: spot,
-        z: bedLayers,
-        smooth: true,
-      }),
-    ),
-  ].sort((a, b) => (a.at?.[0] ?? 0) + (a.at?.[1] ?? 0) - ((b.at?.[0] ?? 0) + (b.at?.[1] ?? 0)));
+}
+
+function PrepareDrawing({ label, className }: DrawingProps) {
+  // The bracket set up on the build plate: the shelf propped on a block of support, layer height chosen.
+  const bedLayers = 6;
+  const { lower, shelf } = bracketBodies("graphite", bedLayers, false);
+  const supportFrom = bedLayers + FLANGE_LAYERS;
+  const supportLayers = (shelf.z ?? 0) - supportFrom - 1;
 
   const bodies: Body[] = [
-    { layers: [{ loops: [roundedRect(680, 680, 20)], count: bedLayers }], tone: "light", smooth: true },
-    ...standing,
-    { layers: [{ loops: [gear, bore], count: bodyLayers }], tone: "graphite", z: bodyZ },
-    { layers: [{ loops: [boss, bore], count: hubLayers }], tone: "graphite", z: hubZ },
+    { layers: [{ loops: [roundedRect(820, 700, 20)], count: bedLayers }], tone: "light", smooth: true },
+    ...lower,
+    // Support material: lighter, with its layer lines showing, and a one-layer gap so it snaps off.
+    { layers: [{ loops: [roundedRect(320, 195, 4, 0, -72)], count: supportLayers }], tone: "light", z: supportFrom },
+    shelf,
   ];
 
-  // Orientation: the part's axis, with a turn arrow around it.
-  const axisTop = top + 250;
+  const top = ((shelf.z ?? 0) + SHELF_LAYERS) * LAYER_HEIGHT;
+
+  // Orientation: the part's upright axis, with a turn arrow around it.
+  const axisAt = SHELF_CENTRE;
+  const axisTop = top + 230;
   const turn = Array.from({ length: 23 }, (_, i) => {
     const a = (0.2 + i * 0.075) * Math.PI;
-    return project([Math.cos(a) * 62, Math.sin(a) * 62], top + 170);
+    return project([axisAt[0] + Math.cos(a) * 62, axisAt[1] + Math.sin(a) * 62], top + 150);
   });
 
-  // Supports callout, from a support at the front left.
-  const frontSupport = supports[7];
-  const supportFrom = project(frontSupport, (bedLayers + supportLayers / 2) * LAYER_HEIGHT);
-  const supportTo: Point = [supportFrom[0] - 190, supportFrom[1] + 120];
+  // Supports callout, from the front of the support block.
+  const supportPoint = project([-90, 23], (supportFrom + supportLayers / 2) * LAYER_HEIGHT);
+  const supportTo: Point = [supportPoint[0] - 230, supportPoint[1] - 120];
 
-  // Layer-height callout, from the rim on the right.
-  const rim: Point = [215 * Math.SQRT1_2, -215 * Math.SQRT1_2];
-  const layerFrom = project(rim, (bodyZ + bodyLayers / 2) * LAYER_HEIGHT);
-  const layerTo: Point = [layerFrom[0] + 150, layerFrom[1] - 110];
+  // Layer-height callout, from the flange's right-hand side, where the layer lines show.
+  const layerPoint = project([310, 60], (bedLayers + FLANGE_LAYERS / 2) * LAYER_HEIGHT);
+  const layerTo: Point = [layerPoint[0] + 120, layerPoint[1] + 110];
 
   return (
     <LayerScene
       bodies={bodies}
       bounds={[
-        project([0, 0], axisTop + 20),
-        [supportTo[0] - 250, supportTo[1] + 20],
-        [layerTo[0] + 215, layerTo[1] - 60],
+        project(axisAt, axisTop + 20),
+        [supportTo[0] - 230, supportTo[1] - 60],
+        [layerTo[0] + 200, layerTo[1] + 20],
       ]}
       label={label}
       className={className}
     >
       <path
-        d={pathOf([project([0, 0], top + 16), project([0, 0], axisTop)])}
+        d={pathOf([project(axisAt, top + 16), project(axisAt, axisTop)])}
         fill="none"
         stroke={INK}
         strokeOpacity="0.45"
@@ -404,13 +361,13 @@ function PrepareDrawing({ label, className }: DrawingProps) {
       <Arrow tip={turn[turn.length - 1]} towards={turn[turn.length - 4]} />
 
       <g fill="none" stroke={ACCENT} strokeWidth="3">
-        <path d={pathOf([supportFrom, supportTo, [supportTo[0] - 216, supportTo[1]]])} />
-        <path d={pathOf([layerFrom, layerTo, [layerTo[0] + 176, layerTo[1]]])} />
+        <path d={pathOf([supportPoint, supportTo, [supportTo[0] - 200, supportTo[1]]])} />
+        <path d={pathOf([layerPoint, layerTo, [layerTo[0] + 176, layerTo[1]]])} />
       </g>
-      <Arrow tip={supportFrom} towards={supportTo} />
-      <Arrow tip={layerFrom} towards={layerTo} />
+      <Arrow tip={supportPoint} towards={supportTo} />
+      <Arrow tip={layerPoint} towards={layerTo} />
       <g fill={INK} fontFamily={MONO} fontSize="40">
-        <text x={supportTo[0] - 216} y={supportTo[1] - 14}>
+        <text x={supportTo[0] - 200} y={supportTo[1] - 14}>
           Supports
         </text>
         <text x={layerTo[0] + 6} y={layerTo[1] - 14}>
@@ -518,59 +475,50 @@ function PrintDrawing({ label, className }: DrawingProps) {
 }
 
 function FinishDrawing({ label, className }: DrawingProps) {
-  // The printed gear, sanded smooth and painted, meshing with a second gear on a mounting plate.
-  const plateLayers = 8;
-  const gearLayers = 16;
-  const capLayers = 9;
+  // The bracket from step 03 finished: supports removed, sanded smooth and painted,
+  // with the printed gear mounted on its shelf and the flange screwed down.
+  const { lower, shelf } = bracketBodies("blue", 0, true);
+  const shelfTop = (shelf.z ?? 0) + SHELF_LAYERS;
+  const gearLayers = 9;
 
-  const bigStep = (Math.PI * 2) / 20;
-  const smallStep = (Math.PI * 2) / 12;
-  const towards = -Math.PI / 4;
-  const centreDistance = 372;
-  // A tooth of the big gear points at the small one, which turns a gap to meet it.
-  const big = rotate(gearOutline(20, 215, 250), towards - 0.55 * bigStep);
-  const small = rotate(gearOutline(12, 120, 152), towards + Math.PI - 0.05 * smallStep);
-  const smallAt: Point = [Math.cos(towards) * centreDistance, Math.sin(towards) * centreDistance];
-  const plateCentre: Point = [smallAt[0] / 2, smallAt[1] / 2];
-
-  // A screw in each corner of the plate: it is bolted together, not just laid out.
-  const screws = rotate(
-    [
-      [-440, -230],
-      [440, -230],
-      [-440, 230],
-      [440, 230],
-    ],
-    towards,
-  ).map(([x, y]): Point => [x + plateCentre[0], y + plateCentre[1]]);
-
-  const gearZ = plateLayers;
-  const topZ = gearZ + gearLayers;
+  const screws: Point[] = [
+    [-250, 160],
+    [250, 160],
+  ];
 
   const bodies: Body[] = [
-    {
-      layers: [{ loops: [rotate(roundedRect(1000, 580, 44), towards)], count: plateLayers }],
-      tone: "light",
-      at: plateCentre,
-      smooth: true,
-    },
+    ...lower,
+    shelf,
     ...screws.map(
       (spot): Body => ({
-        layers: [{ loops: [circle(17, 0, 0, 24)], count: 3 }],
+        layers: [
+          { loops: [circle(22, 0, 0, 24)], count: 2 },
+          { loops: [circle(22, 0, 0, 24), roundedRect(26, 6, 1)], count: 1 },
+        ],
         tone: "graphite",
         at: spot,
-        z: plateLayers,
+        z: FLANGE_LAYERS,
         smooth: true,
       }),
     ),
-    { layers: [{ loops: [big, circle(56)], count: gearLayers }], tone: "blue", z: gearZ, smooth: true },
-    { layers: [{ loops: [circle(56)], count: capLayers }], tone: "graphite", z: topZ, smooth: true },
-    { layers: [{ loops: [small, circle(36)], count: gearLayers }], tone: "light", at: smallAt, z: gearZ, smooth: true },
-    { layers: [{ loops: [circle(36)], count: capLayers }], tone: "graphite", at: smallAt, z: topZ, smooth: true },
+    {
+      layers: [{ loops: [gearOutline(12, 104, 128), circle(28, 0, 0, 32)], count: gearLayers }],
+      tone: "light",
+      at: SHELF_CENTRE,
+      z: shelfTop,
+      smooth: true,
+    },
+    {
+      layers: [{ loops: [circle(28, 0, 0, 32)], count: 7 }],
+      tone: "graphite",
+      at: SHELF_CENTRE,
+      z: shelfTop + gearLayers,
+      smooth: true,
+    },
   ];
 
-  // A small four-point glint on the painted face: finished and ready to use.
-  const glint = project([-120, -60], topZ * LAYER_HEIGHT);
+  // A small four-point glint on the painted wall: finished and ready to use.
+  const glint = project([200, -170], (FLANGE_LAYERS + WALL_LAYERS * 0.62) * LAYER_HEIGHT);
   const star = (size: number) =>
     `M${glint[0]} ${glint[1] - size}Q${glint[0]} ${glint[1]} ${glint[0] + size * 0.6} ${glint[1]}` +
     `Q${glint[0]} ${glint[1]} ${glint[0]} ${glint[1] + size}Q${glint[0]} ${glint[1]} ${glint[0] - size * 0.6} ${glint[1]}` +

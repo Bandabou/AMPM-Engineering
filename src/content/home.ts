@@ -14,11 +14,8 @@ export const servicesCta = { label: "Our Services", href: "#services" };
 export const hero = {
   // Split only so each part can animate in. Together they read as the exact client copy.
   headlineLines: ["From idea to", "finished part."],
-  subheading: {
-    lead: "Engineering and ",
-    highlight: "3D Printing",
-    rest: " for your business.",
-  },
+  // Client copy, one entry per line as written: "design, fix / and print".
+  subheadingLines: ["Aeronautical engineers who design, fix", "and print your parts in-house."],
 };
 
 // Step titles and one-liners: exact client copy. PLACEHOLDER IMAGERY: swap for company photography when supplied.
@@ -33,13 +30,13 @@ export const processStages: { id: HeroDrawingName; label: string; summary: strin
     id: "design",
     label: "Design & file repair",
     summary: "We design your part or fix files that aren’t print-ready.",
-    alt: "Technical drawing of a gear with dimension lines; part of its triangle mesh is marked as repaired",
+    alt: "Technical drawing of a gear with its diameter; part of its triangle mesh is marked as repaired",
   },
   {
     id: "prepare",
     label: "Print preparation",
     summary: "We optimise orientation, supports and settings for the best result.",
-    alt: "The gear on the build plate, propped on blue supports, with a turn arrow for orientation and a layer-height label",
+    alt: "A bracket on the build plate, its overhanging shelf held up by support material, with a turn arrow for orientation and a layer-height label",
   },
   {
     id: "print",
@@ -51,7 +48,7 @@ export const processStages: { id: HeroDrawingName; label: string; summary: strin
     id: "finish",
     label: "Post-processing & assembly",
     summary: "Sanding, painting and assembly, delivered ready to use.",
-    alt: "The finished gear, smooth and painted blue, assembled with a second gear on a mounting plate",
+    alt: "The bracket sanded and painted blue, supports removed, with the gear mounted on its shelf and the base screwed down",
   },
 ];
 

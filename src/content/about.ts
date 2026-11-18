@@ -27,15 +27,14 @@ export const about = {
   story: {
     eyebrow: "Our story",
     statement: {
-      lead: "At AMPM Engineering, we bring together a precision-engineering practice and a dedicated 3D printing operation, focused on ",
+      lead: "At AMPM Engineering, we bring together a precision engineering practice and a dedicated 3D printing operation, focused on ",
       highlight: "engineering-grade additive manufacturing.",
     },
-    body: "All three founders are aeronautical engineers who studied Management of Technology at TU Delft, combining technical engineering expertise with business and project management knowledge.",
   },
   team: {
     title: { lead: "Meet the ", highlight: "Team" },
-    eyebrow: "Founders",
-    intro: "Three aeronautical engineers who believe the best manufacturing partner is one you can speak with directly.",
+    background:
+      "All three founders are aeronautical engineers who studied Management of Technology at TU Delft, combining technical engineering expertise with business and project management knowledge.",
     // PLACEHOLDER PORTRAITS: initials stand in until individual photos are supplied.
     members: [
       {
