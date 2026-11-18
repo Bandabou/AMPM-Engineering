@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 632 485" role="img" aria-label="AMPM Engineering logo">
+  <defs>
+    <linearGradient id="ampm-logo-blue" gradientUnits="userSpaceOnUse" x1="316" y1="0" x2="639" y2="480">
+      <stop offset="0" stop-color="#42629E"/>
+      <stop offset="1" stop-color="#8CB9E2"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#ampm-logo-blue)" d="M316 0L632 485H606L327 57V485H305V57L26 485H0ZM185.6 240H295V262H171.3ZM337 240A68.5 68.5 0 0 1 337 377V355A46.5 46.5 0 0 0 337 262Z"/>
+</svg>
